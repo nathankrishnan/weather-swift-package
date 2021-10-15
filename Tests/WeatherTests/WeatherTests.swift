@@ -2,10 +2,16 @@ import XCTest
 @testable import Weather
 
 final class WeatherTests: XCTestCase {
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(Weather().text, "Hello, World!")
+    let weather = Weather(forCity: "seattle")
+        
+    func testGetLocationId() throws {
+        let expectation = expectation(description: "Get Location Id")
+        
+        if let result = try weather.getLocationId() {
+            print("Location Id: \(result)")
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
     }
 }
