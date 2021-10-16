@@ -2,12 +2,14 @@ import XCTest
 @testable import Weather
 
 final class WeatherTests: XCTestCase {
-    let weather = Weather(forCity: "seattle")
+    let weather = Weather(forCity: "San Francisco")
 
     func testGetLocationId() throws {
         let expectation = expectation(description: "Get Location Id")
+        print("CITY: \(weather.city)")
         
         if let id = try weather.getLocationId() {
+            print("NAME: \(weather.city)")
             print("LOCATION ID: \(id)")
             
             XCTAssertTrue((type(of: id)) == Int.self)
