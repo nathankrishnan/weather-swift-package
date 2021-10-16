@@ -8,7 +8,7 @@ public struct Weather {
    
     
     public init(forCity city: String) {
-        self.city = city
+        self.city = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city.lowercased()
     }
     
     internal func fetchJSON(path: String, completion: @escaping (Result<JSON, Error>) -> Void) {
