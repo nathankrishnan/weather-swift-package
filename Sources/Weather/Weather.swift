@@ -11,7 +11,7 @@ public struct Weather {
         self.city = city
     }
     
-    public func fetchJSON(path: String, completion: @escaping (Result<JSON, Error>) -> Void) {
+    internal func fetchJSON(path: String, completion: @escaping (Result<JSON, Error>) -> Void) {
         enum fetchJSONError: Error {
             case invalidURL
             case missingData
@@ -45,7 +45,7 @@ public struct Weather {
         dataTask.resume()
     }
     
-    func getLocationId() throws -> Int? {
+    internal func getLocationId() throws -> Int? {
         var locationId: Int?
         var fetchError: Error?
         
@@ -70,21 +70,21 @@ public struct Weather {
         return locationId
     }
     
-    func getWeatherInfo() throws -> JSON? {
-        let weatherInfo: [String: String]?
+    public func getCurrentConditions() throws -> [String: String]? {
+        var weatherInfo: [String: String] = [:]
         var fetchError: Error?
-        var output: JSON?
         
         guard let locationId = try getLocationId() else {
-            output = nil
-            return output
+            return nil
         }
         
         dispatchGroup.enter()
         fetchJSON(path: "\(locationId)") { result in
             switch result {
             case .success(let json):
-                output = json
+                let consolidatedWeatherInfo = json["consolidated_weather"][0]
+                weatherInfo["condition"] = consolidatedWeatherInfo["weather_state_name"].string
+                weatherInfo["temperature"] = "\(convertCelToFar(celsiusTemp: consolidatedWeatherInfo["the_temp"].doubleValue)) °F"
                 dispatchGroup.leave()
             case .failure(let error):
                 fetchError = error
@@ -96,14 +96,11 @@ public struct Weather {
         if let fetchError = fetchError {
             throw fetchError
         }
-        return output
+        return weatherInfo
     }
     
-    private func convertCelToFar(celsiusTemp: Int) {
-        
-    }
-    
-    public func getCurrentConditions() {
+    internal func convertCelToFar(celsiusTemp: Double) -> Int {
+        return Int((celsiusTemp * 9/5)) + 32
         
     }
 }
