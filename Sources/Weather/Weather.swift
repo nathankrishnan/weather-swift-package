@@ -1,14 +1,17 @@
 import Foundation
 import SwiftyJSON
 
-public struct Weather {
-    public let city: String
+public class Weather {
+    public var city: String
+    public var condition: String?
+    public var temperature: String?
     private let baseURL = URL(string: "https://www.metaweather.com/api/location/")
     private let dispatchGroup = DispatchGroup()
    
     
     public init(forCity city: String) {
         self.city = city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? city.lowercased()
+        let _ = try? getCurrentConditions()
     }
     
     internal func fetchJSON(path: String, completion: @escaping (Result<JSON, Error>) -> Void) {
@@ -54,12 +57,12 @@ public struct Weather {
             switch result {
             case .success(let json):
                 locationId = json[0]["woeid"].int
-                dispatchGroup.leave()
+                self.dispatchGroup.leave()
             case .failure(let error):
                 print("Request failed with error: \(error)")
                 locationId = nil
                 fetchError = error
-                dispatchGroup.leave()
+                self.dispatchGroup.leave()
             }
         }
         
@@ -79,12 +82,14 @@ public struct Weather {
         }
         
         dispatchGroup.enter()
-        fetchJSON(path: "\(locationId)") { result in
+        fetchJSON(path: "\(locationId)") { [unowned self] result in
             switch result {
             case .success(let json):
                 let consolidatedWeatherInfo = json["consolidated_weather"][0]
                 weatherInfo["condition"] = consolidatedWeatherInfo["weather_state_name"].string
                 weatherInfo["temperature"] = "\(convertCelToFar(celsiusTemp: consolidatedWeatherInfo["the_temp"].doubleValue)) °F"
+                condition = weatherInfo["condition"]
+                temperature = weatherInfo["temperature"]
                 dispatchGroup.leave()
             case .failure(let error):
                 fetchError = error
